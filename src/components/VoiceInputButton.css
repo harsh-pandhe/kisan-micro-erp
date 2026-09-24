@@ -1,0 +1,48 @@
+.voice-input {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.voice-input__mic {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.voice-input__mic--active {
+  background: var(--warning-bg);
+  border-color: var(--warning);
+}
+
+.voice-input__lang {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.voice-input__lang select {
+  min-height: 36px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-h);
+}
+
+.voice-input__status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.voice-input__unsupported {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

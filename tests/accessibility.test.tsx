@@ -5,9 +5,10 @@ import { TransactionsPage } from '../src/pages/TransactionsPage';
 import { SettingsPage } from '../src/pages/SettingsPage';
 
 describe('accessible controls', () => {
-  it('gives the disabled "Add Transaction" button an accessible name', () => {
+  it('gives the Transactions page controls accessible names', () => {
     render(<TransactionsPage />);
-    expect(screen.getByRole('button', { name: 'Add a new transaction' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Parse' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Describe the transaction')).toBeInTheDocument();
   });
 
   it('gives the disabled "Backup data" button an accessible name', () => {

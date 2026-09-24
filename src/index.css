@@ -140,3 +140,132 @@ a {
 .skip-link:focus {
   left: 0;
 }
+
+.section-heading {
+  margin: 1.5rem 0 0.75rem;
+}
+
+.transaction-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.transaction-input__textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.transaction-input__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.parse-result,
+.classification,
+.transaction-review {
+  margin-bottom: 1rem;
+}
+
+.parse-result__fields {
+  margin: 0.75rem 0 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.parse-result__field {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+}
+
+.parse-result__field dt {
+  color: var(--text-muted);
+}
+
+.parse-result__field dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-h);
+  text-align: right;
+}
+
+.parse-result__reasons {
+  margin: 0.5rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.classification__reason {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0.4rem 0;
+}
+
+.classification__remember {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.transaction-review__error,
+.account-form__error {
+  color: var(--warning);
+  font-size: 0.9rem;
+}
+
+.transaction-success {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.transaction-history,
+.account-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.transaction-history__row,
+.account-list__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.transaction-history__desc {
+  margin: 0.35rem 0;
+}
+
+.transaction-history__amount {
+  margin: 0;
+  font-weight: 700;
+}
+
+.account-list__name {
+  font-weight: 600;
+}
+
+.account-list__code {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
