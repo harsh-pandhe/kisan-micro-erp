@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '../components/PageHeader';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
@@ -15,6 +15,7 @@ import {
   type ProfitAndLoss,
   type BalanceSheet,
 } from '../features/reports';
+import { BACKUP_RESTORED_EVENT } from '../features/backup';
 
 type ReportTab = 'trial-balance' | 'profit-loss' | 'balance-sheet';
 
@@ -233,23 +234,36 @@ export function ReportsPage() {
   const [startDate, setStartDate] = useState(initialStart);
   const [endDate, setEndDate] = useState(initialEnd);
   const [asOfDate, setAsOfDate] = useState(initialEnd);
+  // Bumped whenever a backup restore swaps the active database, forcing
+  // the memoized reports below to re-query it even if tab/dates didn't
+  // change.
+  const [dataVersion, setDataVersion] = useState(0);
 
-  // Re-query current SQLite state whenever the active tab or the relevant
-  // period/as-of date changes, so the page never shows stale report data.
-  const trialBalance = useMemo<TrialBalance | null>(
-    () =>
-      tab === 'trial-balance' ? safeRun(() => getTrialBalance(startDate, endDate), null) : null,
-    [tab, startDate, endDate],
-  );
-  const profitAndLoss = useMemo<ProfitAndLoss | null>(
-    () =>
-      tab === 'profit-loss' ? safeRun(() => getProfitAndLoss(startDate, endDate), null) : null,
-    [tab, startDate, endDate],
-  );
-  const balanceSheet = useMemo<BalanceSheet | null>(
-    () => (tab === 'balance-sheet' ? safeRun(() => getBalanceSheet(asOfDate), null) : null),
-    [tab, asOfDate],
-  );
+  useEffect(() => {
+    function handleRestored() {
+      setDataVersion((v) => v + 1);
+    }
+    window.addEventListener(BACKUP_RESTORED_EVENT, handleRestored);
+    return () => window.removeEventListener(BACKUP_RESTORED_EVENT, handleRestored);
+  }, []);
+
+  // Re-query current SQLite state whenever the active tab, the relevant
+  // period/as-of date, or dataVersion changes, so the page never shows
+  // stale report data.
+  const trialBalance = useMemo<TrialBalance | null>(() => {
+    void dataVersion; // forces re-query after a backup restore
+    return tab === 'trial-balance'
+      ? safeRun(() => getTrialBalance(startDate, endDate), null)
+      : null;
+  }, [tab, startDate, endDate, dataVersion]);
+  const profitAndLoss = useMemo<ProfitAndLoss | null>(() => {
+    void dataVersion; // forces re-query after a backup restore
+    return tab === 'profit-loss' ? safeRun(() => getProfitAndLoss(startDate, endDate), null) : null;
+  }, [tab, startDate, endDate, dataVersion]);
+  const balanceSheet = useMemo<BalanceSheet | null>(() => {
+    void dataVersion; // forces re-query after a backup restore
+    return tab === 'balance-sheet' ? safeRun(() => getBalanceSheet(asOfDate), null) : null;
+  }, [tab, asOfDate, dataVersion]);
 
   return (
     <>

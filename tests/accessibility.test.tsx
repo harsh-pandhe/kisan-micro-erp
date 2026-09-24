@@ -11,14 +11,12 @@ describe('accessible controls', () => {
     expect(screen.getByLabelText('Describe the transaction')).toBeInTheDocument();
   });
 
-  it('gives the disabled "Backup data" button an accessible name', () => {
+  it('gives the "Export Backup" button an accessible name', () => {
     render(
       <MemoryRouter>
         <SettingsPage />
       </MemoryRouter>,
     );
-    expect(
-      screen.getByRole('button', { name: 'Backup data (not yet available)' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Export Backup' })).toBeInTheDocument();
   });
 });

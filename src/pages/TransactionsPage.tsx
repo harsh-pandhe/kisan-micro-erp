@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PageHeader } from '../components/PageHeader';
 import { TransactionInput } from '../components/TransactionInput';
 import { ParseResultCard } from '../components/ParseResultCard';
@@ -14,6 +14,7 @@ import { getAllAccounts } from '../features/accounting';
 import type { Account } from '../features/accounting';
 import { listTransactionHistory, recordTransaction } from '../features/transactions';
 import type { TransactionHistoryItem } from '../features/transactions';
+import { BACKUP_RESTORED_EVENT } from '../features/backup';
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -69,6 +70,19 @@ export function TransactionsPage() {
     setAccounts(safeGetAllAccounts());
     setHistory(safeListTransactionHistory());
   }
+
+  // A restore replaces the active database; drop any in-progress draft and
+  // re-read accounts/history so this page never shows pre-restore state.
+  useEffect(() => {
+    function handleRestored() {
+      refreshData();
+      resetDraft();
+      setInputText('');
+      setSuccessMessage(null);
+    }
+    window.addEventListener(BACKUP_RESTORED_EVENT, handleRestored);
+    return () => window.removeEventListener(BACKUP_RESTORED_EVENT, handleRestored);
+  }, []);
 
   function resetDraft() {
     setParseResult(null);

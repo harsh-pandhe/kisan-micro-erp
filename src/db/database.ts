@@ -185,3 +185,31 @@ export function closeDatabase(): void {
   appDb = null;
   initPromise = null;
 }
+
+/**
+ * Atomically swaps the singleton database instance for a new sql.js
+ * connection that the caller has already fully validated (see
+ * `src/features/backup`). The old connection is closed so no stale
+ * reference survives, and `initPromise` is set to an already-resolved
+ * promise so every subsequent `getDatabase()`/`initializeDatabase()` call
+ * anywhere in the app sees the replacement.
+ *
+ * This does NOT persist to IndexedDB — the caller decides when (or
+ * whether) to call `persistDatabase()` afterwards, so a failed persist
+ * cannot be confused with a failed swap.
+ */
+export function replaceDatabase(newRaw: SqlJsDatabase): AppDatabase {
+  const previous = appDb;
+  const next = wrap(newRaw);
+  appDb = next;
+  initPromise = Promise.resolve(next);
+  if (previous && previous.raw !== newRaw) {
+    previous.raw.close();
+  }
+  return next;
+}
+
+/** Loads sql.js once (shared with the singleton lifecycle) so callers can open a temporary, unattached Database. */
+export async function loadSqlJsModule(): Promise<SqlJsStatic> {
+  return loadSqlJs();
+}

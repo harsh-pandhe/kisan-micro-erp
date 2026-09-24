@@ -1,7 +1,7 @@
 import { PageHeader } from '../components/PageHeader';
 import { Card } from '../components/Card';
-import { Button } from '../components/Button';
 import { OfflineStatus } from '../components/OfflineStatus';
+import { BackupRestore } from '../components/BackupRestore';
 
 export function SettingsPage() {
   return (
@@ -18,17 +18,10 @@ export function SettingsPage() {
 
         <Card title="Backup & Restore">
           <p className="card-note">
-            Export and import of your local database will be added in a later milestone. Nothing
-            leaves this device today.
+            Export your entire local database to a file you control, or restore a previous backup.
+            Nothing leaves this device — export and restore both work fully offline.
           </p>
-          <Button
-            type="button"
-            variant="secondary"
-            aria-label="Backup data (not yet available)"
-            disabled
-          >
-            Backup data
-          </Button>
+          <BackupRestore />
         </Card>
 
         <Card title="App Information">
