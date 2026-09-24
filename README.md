@@ -56,12 +56,30 @@ npm run lint         # ESLint
 npm run format:check # Prettier check
 ```
 
+## Install as an app / offline use
+
+The app is a PWA (`vite-plugin-pwa`, Workbox `generateSW`): after building
+and opening it once, the app shell (header, navigation, all pages) is
+precached and loads with no network connection. To try it:
+
+```bash
+npm run build
+npm run preview
+```
+
+Open the preview URL in Chrome/Edge/Android WebView, install it via the
+browser's install prompt or "Add to Home Screen", then reload with the
+network disabled — the shell still loads. See
+[docs/milestone-1.md](docs/milestone-1.md) for what is and isn't verified
+in this milestone.
+
 ## Project structure
 
 ```
 src/
-  app/                 shell, routing
-  components/           shared UI components
+  components/           shell layout + shared UI primitives (Button, Card, ...)
+  pages/                one screen per route (Dashboard, Transactions, ...)
+  hooks/                 shared hooks (e.g. online/offline status)
   features/
     transactions/        transaction capture + lifecycle
     accounting/           double-entry journal engine
@@ -84,6 +102,7 @@ docs/                  architecture, schema, accounting model, parser spec,
 - [Accounting model](docs/accounting-model.md)
 - [Parser spec](docs/parser-spec.md)
 - [Development roadmap](docs/development-roadmap.md)
+- [Milestone 1 — application shell + PWA](docs/milestone-1.md)
 - [Review-1 evidence plan](docs/review-1-evidence.md)
 
 ## Contributing

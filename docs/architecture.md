@@ -116,7 +116,30 @@ claim hardware-backed key storage or tamper-proofing — the key lives in
 IndexedDB like the rest of the app data, which is an intentional, documented
 limitation (see Out of Scope below).
 
-## 9. What is intentionally excluded from Phase 1
+## 9. How the application shell and PWA work
+
+`src/App.tsx` wraps the whole app in an error boundary and a
+`react-router-dom` `HashRouter` (`/`, `/transactions`, `/accounts`,
+`/reports`, `/settings`). `HashRouter` — not `BrowserRouter` — is
+deliberate: this is a static, installable PWA with no server to add
+history-mode rewrite rules, and hash routes always resolve correctly from
+the service-worker cache while offline. `src/components/AppShell.tsx`
+renders a sticky header (app name + live online/offline status), the
+routed page, and a bottom tab bar that becomes a top nav bar on wider
+screens. Each page under `src/pages/` is currently a placeholder built
+from shared primitives in `src/components/` (`Button`, `Card`, `Input`,
+`PageHeader`, `EmptyState`, `StatusBadge`) — no accounting logic lives in
+the UI layer, consistent with the pipeline boundary at the top of this
+document.
+
+Installability and offline shell loading come from `vite-plugin-pwa`
+(Workbox `generateSW`, configured in `vite.config.ts`): it emits a web
+manifest and a service worker that precaches every built asset, so the
+shell opens with no network after the first load. See
+`docs/milestone-1.md` for what was built and verified in that milestone,
+and its stated limitations.
+
+## 10. What is intentionally excluded from Phase 1
 
 CRDT/multi-device sync, Bluetooth/WebRTC transfer, an FPO master database,
 automated depreciation, general NLP-scale language understanding, any cloud

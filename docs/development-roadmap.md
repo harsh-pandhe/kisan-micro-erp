@@ -6,9 +6,9 @@ demoable and tested before the next starts.
 - **Milestone 0 — Repository + architecture** ✅ (this commit)
   Repo, structure, schema design, docs, CI skeleton.
 
-- **Milestone 1 — Application shell + PWA**
+- **Milestone 1 — Application shell + PWA** ✅
   Routable React shell, installable PWA (manifest + service worker), basic
-  navigation, no real data yet.
+  navigation, no real data yet. See `docs/milestone-1.md`.
 
 - **Milestone 2 — SQLite-WASM + IndexedDB**
   sql.js wired up, schema applied on first run, serialize/persist round-trip
