@@ -2,6 +2,7 @@ import { PageHeader } from '../components/PageHeader';
 import { Card } from '../components/Card';
 import { OfflineStatus } from '../components/OfflineStatus';
 import { BackupRestore } from '../components/BackupRestore';
+import { SigningKeyStatus } from '../components/SigningKeyStatus';
 
 export function SettingsPage() {
   return (
@@ -22,6 +23,15 @@ export function SettingsPage() {
             Nothing leaves this device — export and restore both work fully offline.
           </p>
           <BackupRestore />
+        </Card>
+
+        <Card title="Backup Signing">
+          <p className="card-note">
+            Signed backups let you prove, later, that a backup file is exactly what this device
+            exported and hasn't been altered since. Signing uses a key generated and kept on this
+            device — it is never uploaded anywhere.
+          </p>
+          <SigningKeyStatus />
         </Card>
 
         <Card title="App Information">

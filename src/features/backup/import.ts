@@ -5,6 +5,7 @@
  * passed — see docs/milestone-8.md, "Atomic restore".
  */
 import { loadSqlJsModule, persistDatabase, replaceDatabase } from '../../db/database';
+import { verifySignedBackup } from '../crypto';
 import { openCandidateDatabase, summarize, validateCandidateDatabase } from './validate';
 import { BackupError, type BackupSummary, type BackupValidationResult } from './types';
 
@@ -78,4 +79,74 @@ export async function restoreDatabase(bytes: Uint8Array): Promise<BackupSummary>
   }
 
   return summarize(result);
+}
+
+/**
+ * Milestone 9: verifies a signed `.kmesig` file's crypto envelope and,
+ * if that passes, runs M8's SQLite validation against the extracted
+ * bytes — without restoring anything. Used to preview a signed backup
+ * before the user confirms the restore.
+ */
+export async function validateSignedBackupAndSummarize(fileBytes: Uint8Array): Promise<{
+  summary: BackupSummary;
+  keyFingerprint: string;
+  createdAt: string;
+}> {
+  const verification = verifySignedBackup(fileBytes);
+  if (verification.status !== 'VALID') {
+    throw new BackupError('signature-invalid', signedVerificationMessage(verification));
+  }
+  const summary = await validateBackupAndSummarize(verification.sqliteBytes);
+  return {
+    summary,
+    keyFingerprint: verification.keyFingerprint,
+    createdAt: verification.createdAt,
+  };
+}
+
+/**
+ * Milestone 9: restores from a signed `.kmesig` backup. Trust order
+ * (see docs/milestone-9.md, "Restore verification order"):
+ *
+ *   file bytes -> envelope parse -> crypto verification (hash + Ed25519
+ *   signature) -> SQLite open in an isolated instance -> M8's
+ *   `validateCandidateDatabase` (integrity_check, foreign_key_check,
+ *   schema/version) -> only then `replaceDatabase()` + `persistDatabase()`.
+ *
+ * A failed crypto verification throws before any SQLite instance is even
+ * opened, so the active database and its IndexedDB persistence are left
+ * completely untouched — same guarantee M8 gives for a failed SQLite
+ * validation.
+ */
+export async function restoreSignedDatabase(
+  fileBytes: Uint8Array,
+): Promise<{ summary: BackupSummary; keyFingerprint: string; createdAt: string }> {
+  const verification = verifySignedBackup(fileBytes);
+  if (verification.status !== 'VALID') {
+    throw new BackupError('signature-invalid', signedVerificationMessage(verification));
+  }
+
+  const summary = await restoreDatabase(verification.sqliteBytes);
+  return {
+    summary,
+    keyFingerprint: verification.keyFingerprint,
+    createdAt: verification.createdAt,
+  };
+}
+
+function signedVerificationMessage(
+  verification: Exclude<ReturnType<typeof verifySignedBackup>, { status: 'VALID' }>,
+): string {
+  switch (verification.status) {
+    case 'INVALID_HASH':
+      return `Signed backup failed hash verification: ${verification.message}`;
+    case 'INVALID_SIGNATURE':
+      return `Signed backup failed signature verification: ${verification.message}`;
+    case 'INVALID_FORMAT':
+      return `Signed backup has an invalid format: ${verification.message}`;
+    case 'UNSUPPORTED_VERSION':
+      return `Signed backup format is not supported: ${verification.message}`;
+    case 'MALFORMED_BACKUP':
+      return `Signed backup file is malformed: ${verification.message}`;
+  }
 }

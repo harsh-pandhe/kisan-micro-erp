@@ -29,7 +29,8 @@ export type BackupErrorKind =
   | 'missing-tables'
   | 'unsupported-version'
   | 'export-failed'
-  | 'persist-failed';
+  | 'persist-failed'
+  | 'signature-invalid';
 
 export class BackupError extends Error {
   readonly kind: BackupErrorKind;

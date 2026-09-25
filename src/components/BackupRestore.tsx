@@ -5,20 +5,37 @@ import {
   BackupError,
   backupFileName,
   downloadBackup,
+  downloadSignedDatabaseBackup,
   exportDatabase,
+  exportSignedDatabase,
+  looksLikeSignedEnvelope,
   notifyBackupRestored,
   readBackupFile,
   restoreDatabase,
+  restoreSignedDatabase,
   validateBackupAndSummarize,
+  validateSignedBackupAndSummarize,
   type BackupSummary,
 } from '../features/backup';
 
+interface SignedInfo {
+  keyFingerprint: string;
+  createdAt: string;
+}
+
 type RestoreState =
   | { step: 'idle' }
-  | { step: 'validating'; fileName: string }
-  | { step: 'ready_to_restore'; fileName: string; bytes: Uint8Array; summary: BackupSummary }
-  | { step: 'restoring'; fileName: string }
-  | { step: 'success'; fileName: string; summary: BackupSummary }
+  | { step: 'validating'; fileName: string; signed: boolean }
+  | {
+      step: 'ready_to_restore';
+      fileName: string;
+      bytes: Uint8Array;
+      summary: BackupSummary;
+      signed: boolean;
+      signedInfo?: SignedInfo;
+    }
+  | { step: 'restoring'; fileName: string; signed: boolean }
+  | { step: 'success'; fileName: string; summary: BackupSummary; signed: boolean }
   | { step: 'error'; fileName: string; message: string };
 
 function messageFor(cause: unknown): string {
@@ -33,6 +50,11 @@ export function BackupRestore() {
     'idle',
   );
   const [exportError, setExportError] = useState<string | null>(null);
+  const [signedExportStatus, setSignedExportStatus] = useState<
+    'idle' | 'exporting' | 'success' | 'error'
+  >('idle');
+  const [signedExportError, setSignedExportError] = useState<string | null>(null);
+  const [signedExportInfo, setSignedExportInfo] = useState<SignedInfo | null>(null);
   const [restore, setRestore] = useState<RestoreState>({ step: 'idle' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,12 +72,55 @@ export function BackupRestore() {
     }
   }
 
-  async function handleFileSelected(file: File) {
-    setRestore({ step: 'validating', fileName: file.name });
+  async function handleSignedExport() {
+    setSignedExportStatus('exporting');
+    setSignedExportError(null);
     try {
-      const bytes = await readBackupFile(file);
-      const summary = await validateBackupAndSummarize(bytes);
-      setRestore({ step: 'ready_to_restore', fileName: file.name, bytes, summary });
+      const result = await exportSignedDatabase();
+      downloadSignedDatabaseBackup(result);
+      setSignedExportInfo({
+        keyFingerprint: result.keyFingerprint,
+        createdAt: new Date().toISOString(),
+      });
+      setSignedExportStatus('success');
+    } catch (cause) {
+      setSignedExportStatus('error');
+      setSignedExportError(messageFor(cause));
+    }
+  }
+
+  async function handleFileSelected(file: File) {
+    let bytes: Uint8Array;
+    try {
+      bytes = await readBackupFile(file);
+    } catch (cause) {
+      setRestore({ step: 'error', fileName: file.name, message: messageFor(cause) });
+      return;
+    }
+    const signed = looksLikeSignedEnvelope(bytes);
+    setRestore({ step: 'validating', fileName: file.name, signed });
+    try {
+      if (signed) {
+        const { summary, keyFingerprint, createdAt } =
+          await validateSignedBackupAndSummarize(bytes);
+        setRestore({
+          step: 'ready_to_restore',
+          fileName: file.name,
+          bytes,
+          summary,
+          signed: true,
+          signedInfo: { keyFingerprint, createdAt },
+        });
+      } else {
+        const summary = await validateBackupAndSummarize(bytes);
+        setRestore({
+          step: 'ready_to_restore',
+          fileName: file.name,
+          bytes,
+          summary,
+          signed: false,
+        });
+      }
     } catch (cause) {
       setRestore({ step: 'error', fileName: file.name, message: messageFor(cause) });
     }
@@ -63,12 +128,14 @@ export function BackupRestore() {
 
   async function handleConfirmRestore() {
     if (restore.step !== 'ready_to_restore') return;
-    const { fileName, bytes } = restore;
-    setRestore({ step: 'restoring', fileName });
+    const { fileName, bytes, signed } = restore;
+    setRestore({ step: 'restoring', fileName, signed });
     try {
-      const summary = await restoreDatabase(bytes);
+      const summary = signed
+        ? (await restoreSignedDatabase(bytes)).summary
+        : await restoreDatabase(bytes);
       notifyBackupRestored();
-      setRestore({ step: 'success', fileName, summary });
+      setRestore({ step: 'success', fileName, summary, signed });
     } catch (cause) {
       setRestore({ step: 'error', fileName, message: messageFor(cause) });
     }
@@ -102,6 +169,38 @@ export function BackupRestore() {
             <StatusBadge tone="warning">Failed</StatusBadge> {exportError}
           </p>
         ) : null}
+        <p className="card-note">
+          Unsigned backup: a plain SQLite file. Integrity can be checked on restore, but it carries
+          no proof of who created it or that it wasn't modified afterwards.
+        </p>
+      </div>
+
+      <div>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => void handleSignedExport()}
+          disabled={signedExportStatus === 'exporting'}
+        >
+          {signedExportStatus === 'exporting' ? 'Signing backup…' : 'Export Signed Backup'}
+        </Button>
+        {signedExportStatus === 'success' && signedExportInfo ? (
+          <p role="status" aria-live="polite" className="card-note">
+            <StatusBadge tone="positive">Downloaded</StatusBadge> Signed backup download started
+            (signing key fingerprint {signedExportInfo.keyFingerprint}).
+          </p>
+        ) : null}
+        {signedExportStatus === 'error' ? (
+          <p role="alert" className="card-note">
+            <StatusBadge tone="warning">Failed</StatusBadge> {signedExportError}
+          </p>
+        ) : null}
+        <p className="card-note">
+          Signed backup: the same SQLite data, plus a local SHA-256 hash and Ed25519 signature from
+          a key generated and kept on this device. Restoring it proves the file matches what was
+          signed and wasn't altered — it does not encrypt the data, which remains fully readable
+          SQLite.
+        </p>
       </div>
 
       <div>
@@ -112,7 +211,7 @@ export function BackupRestore() {
           id="backup-restore-file"
           ref={fileInputRef}
           type="file"
-          accept=".sqlite,application/x-sqlite3"
+          accept=".sqlite,application/x-sqlite3,.kmesig"
           disabled={isRestoring || restore.step === 'ready_to_restore'}
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -122,14 +221,26 @@ export function BackupRestore() {
 
         {restore.step === 'validating' ? (
           <p role="status" aria-live="polite" className="card-note">
-            Checking “{restore.fileName}”…
+            {restore.signed ? 'Verifying signed backup…' : 'Checking'} “{restore.fileName}”…
           </p>
         ) : null}
 
         {restore.step === 'ready_to_restore' ? (
           <div className="card-note stack-gap">
             <p role="status" aria-live="polite">
-              <StatusBadge tone="warning">Ready</StatusBadge> “{restore.fileName}” is a valid backup
+              {restore.signed ? (
+                <>
+                  <StatusBadge tone="positive">Signature verified</StatusBadge> “{restore.fileName}”
+                  is a valid signed backup (signing key fingerprint{' '}
+                  {restore.signedInfo?.keyFingerprint}, signed at {restore.signedInfo?.createdAt}).
+                </>
+              ) : (
+                <>
+                  <StatusBadge tone="warning">Unsigned</StatusBadge> “{restore.fileName}” is a valid
+                  backup, but has no signature — its authenticity can't be verified, only its SQLite
+                  integrity.
+                </>
+              )}{' '}
               (format v{restore.summary.formatVersion}): {restore.summary.accounts} account(s),{' '}
               {restore.summary.journalEntries} journal entr
               {restore.summary.journalEntries === 1 ? 'y' : 'ies'}, {restore.summary.transactions}{' '}
@@ -161,7 +272,8 @@ export function BackupRestore() {
         {restore.step === 'success' ? (
           <p role="status" aria-live="polite" className="card-note">
             <StatusBadge tone="positive">Restored</StatusBadge> Database restored from “
-            {restore.fileName}”. All pages now reflect the restored data.
+            {restore.fileName}”{restore.signed ? ' (signature verified)' : ' (unsigned)'}. All pages
+            now reflect the restored data.
           </p>
         ) : null}
 

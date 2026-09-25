@@ -181,6 +181,11 @@ milestone works with the device fully offline.
   **Milestone 9's** job (signing with the `@noble/ed25519`/`@noble/hashes`
   dependencies already present in `package.json` for that future work) —
   it is intentionally not attempted here.
+  **Update:** Milestone 9 has now implemented this — see
+  `docs/milestone-9.md`. Restore now also supports signed `.kmesig`
+  backups (crypto-verified, then run through this milestone's SQLite
+  validation) alongside the unsigned `.sqlite` backups described above,
+  which remain fully supported and unchanged.
 - Deferred, not built here: cloud backup destinations (Google Drive,
   Dropbox, OneDrive, S3, Firebase, Supabase, …), automatic/scheduled
   backups, CRDT-based or any multi-device sync.

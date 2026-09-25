@@ -4,6 +4,7 @@
  * never touches IndexedDB — see docs/milestone-8.md, "Export".
  */
 import { getDatabase, loadSqlJsModule } from '../../db/database';
+import { createSignedBackup, downloadSignedBackup, type SignedBackupResult } from '../crypto';
 import { BACKUP_FORMAT_VERSION, BACKUP_FORMAT_VERSION_KEY, BackupError } from './types';
 
 /** `kisan-micro-erp-backup-2026-09-24T101530.sqlite` — sortable, filesystem-safe. */
@@ -45,6 +46,22 @@ export async function exportDatabase(): Promise<Uint8Array> {
   } finally {
     temp.close();
   }
+}
+
+/**
+ * Milestone 9: builds a signed `.kmesig` backup from the same stamped
+ * SQLite bytes `exportDatabase()` produces. Never mutates the live
+ * database — signing happens purely on the already-exported bytes. See
+ * `src/features/crypto` and docs/milestone-9.md.
+ */
+export async function exportSignedDatabase(): Promise<SignedBackupResult> {
+  const bytes = await exportDatabase();
+  return createSignedBackup(bytes);
+}
+
+/** Triggers a browser download of an already-built signed backup. */
+export function downloadSignedDatabaseBackup(result: SignedBackupResult): void {
+  downloadSignedBackup(result.envelopeBytes, result.fileName);
 }
 
 /** Wraps the exported bytes as a downloadable Blob (typed for the SQLite file). */
