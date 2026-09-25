@@ -167,14 +167,14 @@ offline; only the typed flow is guaranteed to.
 
 ## Error handling per failure mode
 
-| Failure | What happens |
-| --- | --- |
-| Parser `INVALID` | `ParseResultCard` shows a plain-language message and the parser's `reasons`; nothing else runs. |
-| Parser `AMBIGUOUS` | Shown with reasons; classification/review are not offered until the text is fixed and re-parsed to `SUCCESS`. |
-| Classification `unknown`/`ambiguous`/`invalid` | User must resolve via the account picker before the review card appears (`canReview` stays false). |
-| `learnMapping`/`relearnMapping` throws | Caught in `handleConfirm`; posting does not proceed; error shown, input preserved. |
+| Failure                                                                                                   | What happens                                                                                                                                                                                                              |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parser `INVALID`                                                                                          | `ParseResultCard` shows a plain-language message and the parser's `reasons`; nothing else runs.                                                                                                                           |
+| Parser `AMBIGUOUS`                                                                                        | Shown with reasons; classification/review are not offered until the text is fixed and re-parsed to `SUCCESS`.                                                                                                             |
+| Classification `unknown`/`ambiguous`/`invalid`                                                            | User must resolve via the account picker before the review card appears (`canReview` stays false).                                                                                                                        |
+| `learnMapping`/`relearnMapping` throws                                                                    | Caught in `handleConfirm`; posting does not proceed; error shown, input preserved.                                                                                                                                        |
 | `recordTransaction` throws (e.g. `AccountNotFoundError`, `UnbalancedEntryError`, `DuplicateVoucherError`) | Caught in `handleConfirm`; `postError` is shown next to the confirm button; input and draft state are preserved so the user can fix and retry; the `transactions` row is marked `rejected`, not left as a false "posted". |
-| IndexedDB persistence failure | Surfaces as a thrown `DatabaseError` from `persistDatabase()`, handled the same way as any other `recordTransaction` failure. |
+| IndexedDB persistence failure                                                                             | Surfaces as a thrown `DatabaseError` from `persistDatabase()`, handled the same way as any other `recordTransaction` failure.                                                                                             |
 
 ## Architectural boundaries
 
