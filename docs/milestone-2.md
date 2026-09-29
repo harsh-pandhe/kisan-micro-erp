@@ -31,18 +31,47 @@ app.
 
 ### WASM asset loading
 
-`sql.js`'s `.wasm` binary is copied into `public/sql-wasm.wasm` (from
-`node_modules/sql.js/dist/sql-wasm.wasm`) so Vite serves it as a plain
-static asset at `/sql-wasm.wasm`, and `vite-plugin-pwa`'s
-`globPatterns` (already including `wasm` from Milestone 1) precaches it
-alongside the rest of the shell — confirmed in the production build (see
-"Browser/build verification" below). `initSqlJs({ locateFile })` in
-`src/db/database.ts` resolves to `${BASE_URL}sql-wasm.wasm` at runtime.
-Under Vitest the same function resolves to the package's own copy on
-disk instead (`./node_modules/sql.js/dist/${file}`), since sql.js
-detects the Node test runner and reads it via `fs` rather than `fetch`
-— this only ever executes under `import.meta.env.MODE === 'test'`, never
-in the shipped app.
+`sql.js`'s `package.json` `exports` map resolves to a **different glue
+file** depending on how it's imported: the `browser` condition (used by
+Vite's production build) resolves to `dist/sql-wasm-browser.js`, while
+the `default`/Node condition (used by Vitest) resolves to
+`dist/sql-wasm.js`. Each glue file has its own `.wasm` filename
+hard-coded into it via `locateFile`'s default — `sql-wasm-browser.wasm`
+for the browser build, `sql-wasm.wasm` for the Node build. The two
+binaries are byte-identical, but they are still two distinct filenames,
+and only the one the active glue file actually requests needs to exist
+as a servable asset.
+
+Because of this, the file shipped in `public/` (and therefore in
+`dist/` and the service-worker precache) is
+`public/sql-wasm-browser.wasm` — copied from
+`node_modules/sql.js/dist/sql-wasm-browser.wasm` — so Vite serves it as
+a plain static asset at `/sql-wasm-browser.wasm`, matching exactly what
+the production bundle's `sql-wasm-browser.js` glue requests. (An
+earlier version of this milestone shipped `public/sql-wasm.wasm`
+instead, which is the _Node_ build's filename, not the browser build's;
+that file is never referenced by the shipped browser bundle and was
+removed after a production deployment showed a live `404` for
+`sql-wasm-browser.wasm` and a `DatabaseError` with
+`kind: 'wasm-init-failed'` — see `docs/manual-qa-results.md` for the
+incident notes.) `initSqlJs({
+locateFile })` in `src/db/database.ts` resolves to
+`${BASE_URL}${file}` at runtime, where `file` is whatever filename the
+active sql.js glue code passes in — no filename is hard-coded in this
+project's own source, so this resolves correctly for whichever glue
+file actually loaded. `vite-plugin-pwa`'s `globPatterns` (already
+including `wasm` from Milestone 1) precaches `sql-wasm-browser.wasm`
+alongside the rest of the shell — confirmed in the production build
+(see "Browser/build verification" below). Under Vitest, the same
+`locateFile` function instead resolves to the package's own Node-glue
+copy on disk (`./node_modules/sql.js/dist/${file}`, where `file` is
+`sql-wasm.wasm` under that glue), since sql.js detects the Node test
+runner and reads it via `fs` rather than `fetch` — this only ever
+executes under `import.meta.env.MODE === 'test'`, never in the shipped
+app. `tests/db/wasm-asset.test.ts` asserts both filenames and the
+public-asset match directly against the installed sql.js package, so a
+future sql.js upgrade that changes either filename fails the suite
+instead of only failing in a real browser.
 
 ## DB init lifecycle
 

@@ -5,6 +5,38 @@
 **Environment:** headless cloud development container (no display, no
 Android SDK, no Android emulator/device).
 
+## Incident: production WASM 404 on Vercel (found via real Chrome, fixed)
+
+A real Chrome browser against the Vercel deployment of this branch found
+a genuine bug that sandbox `curl` checks had missed: the production
+browser bundle requests `/sql-wasm-browser.wasm` (sql.js's `browser`
+package-export condition, used by Vite's production build), but the
+repository only shipped `public/sql-wasm.wasm` (the _Node_ condition's
+filename, which Vitest uses via a separate code path that reads directly
+from `node_modules`, never from `public/`). The mismatch produced a
+`404`, sql.js's WASM streaming _and_ fallback ArrayBuffer instantiation
+both failed, and the app correctly failed safe into the "Database
+unavailable" screen with `DatabaseError.kind === 'wasm-init-failed'`
+(visible in the UI as of the previous commit's diagnostic fix).
+
+**Why sandbox `curl` checks didn't catch this:** earlier verification in
+this environment curled `/sql-wasm.wasm` — the file that existed — and
+got a correct `200`/`application/wasm` response, which was true but
+irrelevant: the shipped browser bundle never requests that filename.
+Only inspecting the actual built JS bundle's asset reference (`grep -o
+"sql-wasm[a-z-]*\.wasm" dist/assets/*.js`) or a real browser's Network
+tab reveals the filename actually requested. This is now covered by an
+automated regression test (`tests/db/wasm-asset.test.ts`) that derives
+the expected filename directly from the installed sql.js package rather
+than assuming it.
+
+**Fix:** ship `public/sql-wasm-browser.wasm` (copied from
+`node_modules/sql.js/dist/sql-wasm-browser.wasm`, byte-identical to the
+previously-shipped `sql-wasm.wasm`) instead of `public/sql-wasm.wasm`.
+See `docs/milestone-2.md` → "WASM asset loading" for the full
+explanation and `docs/manual-qa-results.md` git history / commit
+`fix: correct sql.js browser wasm asset` for the change itself.
+
 ## Blocker statement
 
 > Android Emulator / real-browser QA was **not executable** in this
