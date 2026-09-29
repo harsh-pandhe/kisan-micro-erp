@@ -12,7 +12,21 @@
 }
 
 .app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--text-h);
+}
+
+.app-header__logo {
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  .app-header {
+    padding-top: calc(0.75rem + env(safe-area-inset-top));
+  }
 }

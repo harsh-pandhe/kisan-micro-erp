@@ -5,7 +5,10 @@ import './Header.css';
 export function Header() {
   return (
     <header className="app-header">
-      <span className="app-header__brand">Kisan Micro-ERP</span>
+      <span className="app-header__brand">
+        <img src="/favicon.svg" alt="" width={24} height={24} className="app-header__logo" />
+        Kisan Micro-ERP
+      </span>
       <OfflineStatus />
     </header>
   );

@@ -16,15 +16,33 @@
 
 .bottom-nav__link {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.15rem;
   min-height: 56px;
   padding: 0.4rem;
+  padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-muted);
   text-decoration: none;
+  transition:
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.bottom-nav__link:active {
+  transform: scale(0.96);
+}
+
+.bottom-nav__icon {
+  transition: transform 0.15s ease;
+}
+
+.bottom-nav__link--active .bottom-nav__icon {
+  transform: translateY(-1px);
 }
 
 .bottom-nav__link:focus-visible {

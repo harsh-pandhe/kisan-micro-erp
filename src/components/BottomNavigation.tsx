@@ -1,12 +1,19 @@
+import {
+  LayoutDashboard,
+  ReceiptText,
+  WalletCards,
+  ChartNoAxesCombined,
+  Settings,
+} from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import './BottomNavigation.css';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', end: true },
-  { to: '/transactions', label: 'Transactions' },
-  { to: '/accounts', label: 'Accounts' },
-  { to: '/reports', label: 'Reports' },
-  { to: '/settings', label: 'Settings' },
+  { to: '/', label: 'Dashboard', end: true, Icon: LayoutDashboard },
+  { to: '/transactions', label: 'Transactions', Icon: ReceiptText },
+  { to: '/accounts', label: 'Accounts', Icon: WalletCards },
+  { to: '/reports', label: 'Reports', Icon: ChartNoAxesCombined },
+  { to: '/settings', label: 'Settings', Icon: Settings },
 ] as const;
 
 /** Mobile bottom tab bar. Also usable as top-level nav on larger screens. */
@@ -23,7 +30,8 @@ export function BottomNavigation() {
                 `bottom-nav__link${isActive ? ' bottom-nav__link--active' : ''}`
               }
             >
-              {item.label}
+              <item.Icon className="bottom-nav__icon" size={22} aria-hidden="true" />
+              <span>{item.label}</span>
             </NavLink>
           </li>
         ))}

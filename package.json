@@ -17,6 +17,8 @@
     "@noble/ed25519": "^3.2.0",
     "@noble/hashes": "^2.4.0",
     "idb": "^8.0.3",
+    "lucide-react": "^1.48.0",
+    "motion": "^13.4.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",

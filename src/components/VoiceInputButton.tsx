@@ -1,3 +1,4 @@
+import { Mic, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import './VoiceInputButton.css';
 
@@ -93,7 +94,11 @@ export function VoiceInputButton({
         aria-pressed={isListening}
         aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
       >
-        {isListening ? '■' : '🎤'}
+        {isListening ? (
+          <Square size={18} aria-hidden="true" fill="currentColor" />
+        ) : (
+          <Mic size={20} aria-hidden="true" />
+        )}
       </button>
       <label className="voice-input__lang">
         <span className="voice-input__lang-label">Voice language</span>

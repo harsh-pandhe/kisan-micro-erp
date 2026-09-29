@@ -6,18 +6,44 @@
 }
 
 .voice-input__mic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 44px;
   min-height: 44px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface);
-  font-size: 1.1rem;
+  color: var(--text-h);
   cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.voice-input__mic:active {
+  transform: scale(0.95);
 }
 
 .voice-input__mic--active {
   background: var(--warning-bg);
   border-color: var(--warning);
+  color: var(--warning);
+  animation: voice-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes voice-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--warning-bg);
+  }
+  50% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-input__mic--active {
+    animation: none;
+  }
 }
 
 .voice-input__lang {
