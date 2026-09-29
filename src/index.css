@@ -1,3 +1,137 @@
+/* Tailwind v4 (CSS-first, no config file). Preflight (the base reset layer)
+ * is intentionally NOT imported here: this app already has a hand-written
+ * base stylesheet (this file) that existing pages depend on, and Tailwind's
+ * reset would visibly change unstyled form controls/headings on pages this
+ * milestone must not touch. We only pull in the utilities + theme layers. */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/*
+ * Design tokens (Tailwind v4 @theme). These mirror/extend the existing
+ * hand-rolled --text/--bg/... custom properties below (kept for backward
+ * compatibility with existing component CSS) with the semantic shadcn-style
+ * names (--background, --foreground, --card, ...) that new src/components/ui
+ * components and Tailwind utilities (bg-background, text-foreground, ...)
+ * read. Values are the same deep-green Indian-fintech palette established
+ * in the existing token set, refined per docs/ui-ux-system.md.
+ */
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --color-background: #f6f5f2;
+  --color-foreground: #16171d;
+  --color-card: #ffffff;
+  --color-card-foreground: #16171d;
+  --color-muted: #f0efe9;
+  --color-muted-foreground: #6b6375;
+  --color-border: #e0dedb;
+  --color-primary: #166534;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f0efe9;
+  --color-secondary-foreground: #16171d;
+  --color-success: #166534;
+  --color-success-foreground: #ffffff;
+  --color-warning: #92400e;
+  --color-warning-foreground: #ffffff;
+  --color-danger: #b91c1c;
+  --color-danger-foreground: #ffffff;
+  --color-info: #1d4ed8;
+  --color-info-foreground: #ffffff;
+  --color-ring: #2563eb;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* Restrained elevation: cards read mainly via surface + border, shadows
+   * only used for genuinely "lifted" elements (dialogs, sheets, popovers). */
+  --shadow-subtle: 0 1px 2px rgba(16, 17, 26, 0.04);
+  --shadow-card: 0 1px 3px rgba(16, 17, 26, 0.06), 0 1px 2px rgba(16, 17, 26, 0.04);
+  --shadow-overlay: 0 12px 32px rgba(16, 17, 26, 0.18), 0 2px 8px rgba(16, 17, 26, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: #101114;
+    --color-foreground: #f3f4f6;
+    --color-card: #16171d;
+    --color-card-foreground: #f3f4f6;
+    --color-muted: #1e1f26;
+    --color-muted-foreground: #9ca3af;
+    --color-border: #2e303a;
+    --color-primary: #4ade80;
+    --color-primary-foreground: #08120b;
+    --color-secondary: #1e1f26;
+    --color-secondary-foreground: #f3f4f6;
+    --color-success: #4ade80;
+    --color-success-foreground: #08120b;
+    --color-warning: #fbbf24;
+    --color-warning-foreground: #08120b;
+    --color-danger: #f87171;
+    --color-danger-foreground: #1a0a0a;
+    --color-info: #60a5fa;
+    --color-info-foreground: #07131f;
+    --color-ring: #60a5fa;
+  }
+}
+
+/* Typography scale (system fonts only, no remote loading). Utility classes
+ * for use by future page-redesign milestones; existing pages are untouched
+ * and keep using plain h1/h2/h3 + body text from the rules below. */
+.text-display {
+  font-size: 2.25rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.text-h1 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.text-h2 {
+  font-size: 1.375rem;
+  line-height: 1.25;
+  font-weight: 600;
+}
+.text-h3 {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.text-body {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+.text-body-small {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  font-weight: 400;
+}
+.text-caption {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: var(--muted-foreground, var(--text-muted));
+}
+.text-label {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+/* Financial amounts: tabular figures so columns of numbers align, and a
+ * touch heavier so amounts read as the primary data point on a row. */
+.financial-number {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
 :root {
   --text: #3f3d45;
   --text-h: #16171d;
