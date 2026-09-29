@@ -3,7 +3,22 @@
 This is the Milestone 10 audit record: what was actually checked (code
 read, tests run) as of 2026-09-25, not a restatement of earlier milestone
 reports. Every status label below reflects direct verification done during
-this audit. Labels used:
+this audit.
+
+**Update (2026-09-29, baseline `bee66d9`):** A follow-up QA pass attempted
+Android-emulator/real-browser verification and found no Android SDK
+tooling (`adb`, `emulator`) or running device/emulator available in this
+environment. That pass re-ran the full automated regression (lint,
+format, tests x2, build) with identical clean results and performed a
+fresh static client-only/architecture audit with no new findings. All
+Android/browser/device-level items remain exactly as labeled below —
+**NOT-VERIFIED-IN-SANDBOX or BLOCKED, never upgraded to PASS**. See
+[`docs/manual-qa-results.md`](./manual-qa-results.md) for the full
+results table, the explicit blocker statement, and the ready-to-execute
+54-step manual QA procedure for the next environment with Android
+tooling.
+
+Labels used:
 
 - **VERIFIED-AUTOMATED** — an automated test in this repo asserts it, and
   that test was run during this audit.
