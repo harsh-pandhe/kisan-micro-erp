@@ -7,7 +7,7 @@ import { SettingsPage } from '../src/pages/SettingsPage';
 describe('accessible controls', () => {
   it('gives the Transactions page controls accessible names', () => {
     render(<TransactionsPage />);
-    expect(screen.getByRole('button', { name: 'Parse' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Review transaction' })).toBeInTheDocument();
     expect(screen.getByLabelText('Describe the transaction')).toBeInTheDocument();
   });
 

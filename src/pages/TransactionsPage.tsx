@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { CircleCheck } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { PageHeader } from '../components/PageHeader';
 import { TransactionInput } from '../components/TransactionInput';
 import { ParseResultCard } from '../components/ParseResultCard';
@@ -48,6 +50,8 @@ function safeListTransactionHistory(): TransactionHistoryItem[] {
 }
 
 export function TransactionsPage() {
+  const reduceMotion = useReducedMotion();
+  const resultHeadingRef = useRef<HTMLDivElement>(null);
   const [inputText, setInputText] = useState('');
   const [voiceLanguage, setVoiceLanguage] = useState<VoiceLanguage>('en-IN');
 
@@ -115,6 +119,12 @@ export function TransactionsPage() {
         );
       }
     }
+    // Move focus to the parse-result heading so screen-reader/keyboard users
+    // land on the new outcome instead of staying on the button.
+    requestAnimationFrame(() => {
+      resultHeadingRef.current?.querySelector('h3')?.setAttribute('tabindex', '-1');
+      (resultHeadingRef.current?.querySelector('h3') as HTMLElement | null)?.focus();
+    });
   }
 
   const resolvedAccount =
@@ -178,10 +188,10 @@ export function TransactionsPage() {
   }
 
   return (
-    <>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 pb-8">
       <PageHeader
-        title="Transactions"
-        description="Describe a transaction in plain text or speech, then review and confirm it before it's recorded."
+        title="New transaction"
+        description="Describe what happened. We'll prepare it for you."
       />
 
       <TransactionInput
@@ -197,12 +207,22 @@ export function TransactionsPage() {
       />
 
       {successMessage ? (
-        <p role="status" aria-live="polite" className="transaction-success">
+        <motion.div
+          role="status"
+          aria-live="polite"
+          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className="flex items-center gap-2 rounded-[var(--radius-md)] border border-success/30 bg-success/10 px-4 py-3 text-body-small text-success"
+        >
+          <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
           {successMessage}
-        </p>
+        </motion.div>
       ) : null}
 
-      {parseResult ? <ParseResultCard result={parseResult} /> : null}
+      <div ref={resultHeadingRef}>
+        {parseResult ? <ParseResultCard result={parseResult} /> : null}
+      </div>
 
       {classification ? (
         <ClassificationCard
@@ -239,8 +259,10 @@ export function TransactionsPage() {
         />
       ) : null}
 
-      <h2 className="section-heading">History</h2>
-      <TransactionHistory items={history} />
-    </>
+      <div className="mt-2 flex flex-col gap-3">
+        <h2 className="text-h3 text-foreground">History</h2>
+        <TransactionHistory items={history} />
+      </div>
+    </div>
   );
 }

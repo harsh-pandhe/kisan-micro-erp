@@ -30,7 +30,7 @@ function renderAt(path: string) {
 describe('routing', () => {
   it.each([
     ['/', 'Dashboard'],
-    ['/transactions', 'Transactions'],
+    ['/transactions', 'New transaction'],
     ['/accounts', 'Accounts'],
     ['/reports', 'Reports'],
     ['/settings', 'Settings'],

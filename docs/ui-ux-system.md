@@ -240,3 +240,91 @@ product owner's stated priorities:
 
 Until each page's milestone lands, both component sets coexist; this is
 expected and not a bug.
+
+## Transactions page UX specification (M11-B)
+
+The Transactions page (`src/pages/TransactionsPage.tsx`) is the first page
+migrated to `src/components/ui/*`. Product framing: *"Tell Kisan Micro-ERP
+what happened. It prepares the accounting entry. You review it. You decide
+whether to record it."*
+
+**Information hierarchy.** The composer textarea
+(`TransactionInput.tsx`) is the visual focal point of the page: a large,
+soft-bordered surface with a strong focus ring, sized for 3-5 lines. Example
+chips are secondary (outline, small, pill-shaped) and only ever fill the
+textarea — they never auto-submit. The primary CTA ("Review transaction")
+is visually dominant; voice input sits beside it as an equal but
+secondary affordance.
+
+**State-model presentation.** The page still drives the same M6 state
+machine (idle → parsed → classification → review → posting →
+success/error); this milestone only restyles it:
+
+- **Parsed (`ParseResultCard.tsx`)** — SUCCESS shows the amount as the
+  largest element on the card (`.financial-number`), with type/party/item/
+  payment-mode/date as secondary rows, omitting any field the parser didn't
+  return rather than showing "—" placeholders. INVALID and AMBIGUOUS use a
+  calm icon + heading + the *actual* `result.reasons` text — never invented
+  copy — and AMBIGUOUS never lets the user proceed as if the transaction
+  were valid.
+- **Classification (`ClassificationCard.tsx`)** — MATCHED shows the account
+  as a single confirmed row with the real match `reason` and a "Change
+  account" action. UNKNOWN/AMBIGUOUS never suggest or create a fallback
+  account; AMBIGUOUS candidates are rendered as selectable rows with an
+  icon + text "selected" state (a border/ring and a check icon), never
+  color alone, and never a pre-selected candidate. "Remember this for
+  future transactions" is a plain accessible checkbox wired to the existing
+  `learnMapping`/`relearnMapping` calls, unchanged in behavior — the UI only
+  offers it where those calls apply.
+- **Review (`TransactionReview.tsx`)** — the financial safety checkpoint.
+  The amount is the largest element on the page at this state; an explicit
+  "Nothing has been recorded yet." line sits above the primary "Record
+  transaction" button so the distinction between *understood* and
+  *recorded* is never ambiguous. The counter-account label reuses the
+  existing `COUNTER_LABEL` mapping from M6 verbatim (restyled, not
+  reimplemented).
+- **Posting/success/error** — the record button shows a spinner + "Recording…"
+  and is disabled for the entire in-flight call, preserving the exact M6
+  guarantee of exactly one post per confirm (covered by
+  `tests/transactions-page.test.tsx`). Success shows a `CircleCheck` +
+  motion fade before the page returns to the entry state. Failure shows the
+  real error message, "Nothing was posted." is implied by leaving the review
+  card in place, and the user's typed text is preserved — never a fake
+  success state.
+
+**History (`TransactionHistory.tsx`).** A dividers-based list rather than a
+card-per-row, grouped by Today/Yesterday/Earlier using only the existing
+`createdAt` ordering (no re-query, no new sort). Direction (`+`/`-`) is only
+shown for the voucher types the parser actually produces
+(`sale`/`receipt` → `+`, `purchase`/`payment` → `−`); anything else is left
+unsigned rather than guessed. Empty state uses the shared `EmptyState`
+component (now with an optional `icon` slot) with an "Add transaction" CTA
+that focuses the composer.
+
+**Mobile behavior.** No component uses a fixed/sticky footer; the composer,
+result, classification and review cards all flow in normal document order
+so focusing the textarea never permanently hides the CTA behind an
+on-screen keyboard. Layout uses simple flex/gap spacing rather than
+`PageContainer` (this page's content is a single narrow column, so a
+max-width wrapper was applied directly rather than through that
+component).
+
+**Motion.** Composer, parse-result, classification and review entrances use
+the same `motion/react` + `useReducedMotion()` convention as
+`AppShell.tsx`/`toast.tsx` (2048b92/552d055): an 8px upward fade over
+150-250ms, skipped entirely when reduced motion is requested. The voice
+button's "listening" pulse uses a slow, non-jarring `scale` loop, also
+unaffected by the checkmark/icon meaning (it's a supplementary cue, not the
+only listening indicator — the "Listening…" text label is always present
+too).
+
+**Accessibility notes specific to this page.** The composer textarea has a
+visible, properly associated `<label>`; example chips are real `<button>`
+elements; the mic button's accessible name switches between "Start voice
+input" and "Stop voice input"; parse/classification result cards carry
+`aria-live` (`polite` for success/matched, and `role="alert"` for
+INVALID/AMBIGUOUS/errors) so screen-reader users hear outcomes without
+extra navigation; after a parse, focus moves to the result heading; the
+account `Select` and AMBIGUOUS candidate rows are keyboard-operable and
+never rely on color alone (each carries an icon and/or text state); the
+review card's error text uses `role="alert"` with `aria-live="assertive"`.

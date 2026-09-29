@@ -1,6 +1,7 @@
 import { Mic, Square } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import './VoiceInputButton.css';
+import { motion, useReducedMotion } from 'motion/react';
+import { cn } from '../lib/utils';
 
 export type VoiceLanguage = 'en-IN' | 'hi-IN';
 
@@ -44,6 +45,7 @@ export function VoiceInputButton({
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(() => getSpeechRecognitionCtor() !== null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     return () => {
@@ -53,7 +55,9 @@ export function VoiceInputButton({
 
   if (!isSupported) {
     return (
-      <p className="voice-input__unsupported">Voice input is not supported in this browser.</p>
+      <p className="text-caption text-muted-foreground">
+        Voice input is not supported in this browser.
+      </p>
     );
   }
 
@@ -85,34 +89,49 @@ export function VoiceInputButton({
   }
 
   return (
-    <div className="voice-input">
+    <div className="flex flex-wrap items-center gap-3">
       <button
         type="button"
-        className={`voice-input__mic ${isListening ? 'voice-input__mic--active' : ''}`}
+        className={cn(
+          'inline-flex h-10 w-10 items-center justify-center rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:cursor-not-allowed disabled:opacity-50',
+          isListening
+            ? 'border-danger bg-danger/10 text-danger'
+            : 'border-border bg-transparent text-foreground hover:bg-muted',
+        )}
         onClick={handleClick}
         disabled={disabled}
         aria-pressed={isListening}
         aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
       >
         {isListening ? (
-          <Square size={18} aria-hidden="true" fill="currentColor" />
+          <motion.span
+            animate={reduceMotion ? undefined : { scale: [1, 1.15, 1] }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+            className="inline-flex"
+          >
+            <Square size={16} aria-hidden="true" fill="currentColor" />
+          </motion.span>
         ) : (
-          <Mic size={20} aria-hidden="true" />
+          <Mic size={18} aria-hidden="true" />
         )}
       </button>
-      <label className="voice-input__lang">
-        <span className="voice-input__lang-label">Voice language</span>
+
+      <label className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+        <span className="sr-only">Voice language</span>
         <select
+          className="h-8 rounded-[var(--radius-sm)] border border-border bg-card px-2 text-xs text-foreground disabled:opacity-50"
           value={language}
           onChange={(e) => onLanguageChange(e.target.value as VoiceLanguage)}
           disabled={isListening}
+          aria-label="Voice language"
         >
           <option value="en-IN">English</option>
           <option value="hi-IN">हिन्दी (Hindi)</option>
         </select>
       </label>
+
       {isListening ? (
-        <span className="voice-input__status" role="status" aria-live="polite">
+        <span className="text-caption text-danger" role="status" aria-live="polite">
           Listening…
         </span>
       ) : null}

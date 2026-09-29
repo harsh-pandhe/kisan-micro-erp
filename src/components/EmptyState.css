@@ -10,6 +10,10 @@
   color: var(--text-muted);
 }
 
+.empty-state__icon {
+  color: var(--text-muted);
+}
+
 .empty-state__title {
   margin: 0;
   font-weight: 600;
